@@ -1,3 +1,4 @@
+@import url("https://fonts.googleapis.com/css2?family=Comic+Relief:wght@400;700&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap");
 @import "tailwindcss";
 
 @layer utilities {
@@ -7,5 +8,8 @@
   .no-scrollbar {
     -ms-overflow-style: none; /* IE, Edge */
     scrollbar-width: none; /* Firefox */
+  }
+  .font-comic-sans {
+    font-family: "Comic Relief", sans-serif;
   }
 }

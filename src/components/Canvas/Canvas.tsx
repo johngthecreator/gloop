@@ -18,6 +18,8 @@ interface CanvasProps {
   ) => (e: React.MouseEvent<HTMLDivElement>) => void;
   onRotate?: (elementId: string, deltaRotation: number) => void;
   onMeasure?: (elementId: string, width: number, height: number) => void;
+  onToggleFont?: (id: string) => void;
+  onToggleItalic?: (id: string) => void;
   isDragging?: boolean;
 }
 
@@ -34,6 +36,8 @@ const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
     onRotateHandleMouseDown,
     onRotate,
     onMeasure,
+    onToggleFont,
+    onToggleItalic,
     isDragging = false,
   },
   ref,
@@ -73,6 +77,8 @@ const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
             onMeasure={onMeasure}
             onMouseDown={onElementMouseDown?.(element.id)}
             onRotateHandleMouseDown={onRotateHandleMouseDown?.(element.id)}
+            onToggleFont={onToggleFont}
+            onToggleItalic={onToggleItalic}
             isDragging={isDragging}
           />
         ))}

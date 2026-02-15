@@ -1,5 +1,6 @@
 import { useRef, useEffect } from "react";
 import { useAutoSizing } from "../../hooks/useAutoSizing";
+import { Italic } from "lucide-react";
 
 interface TextboxProps {
   id: string;
@@ -18,6 +19,10 @@ interface TextboxProps {
   onMeasure?: (elementId: string, width: number, height: number) => void;
   onMouseDown?: (e: React.MouseEvent<HTMLDivElement>) => void;
   onRotateHandleMouseDown?: (e: React.MouseEvent<HTMLDivElement>) => void;
+  onToggleFont?: (id: string) => void;
+  onToggleItalic?: (id: string) => void;
+  fontFamily?: "comic-sans" | "sans";
+  italic?: boolean;
   isDragging?: boolean;
 }
 
@@ -33,10 +38,14 @@ export default function Textbox({
   y,
   width,
   fontSize = 16,
+  fontFamily = "sans",
+  italic = false,
   onRotate,
   onMeasure,
   onMouseDown,
   onRotateHandleMouseDown,
+  onToggleFont,
+  onToggleItalic,
   isDragging = false,
 }: TextboxProps) {
   const contentRef = useRef<HTMLDivElement>(null);
@@ -112,11 +121,9 @@ export default function Textbox({
 
   return (
     <div
-      className={`absolute group transition-opacity p-2 ${isDragging ? "opacity-70" : ""} ${
-        isSelected
-          ? "border-2 border-dotted border-blue-500"
-          : "border-2 border-transparent"
-      } rounded`}
+      className={`absolute group transition-opacity p-2 border-2 rounded ${
+        isDragging ? "opacity-70" : ""
+      } ${isSelected ? "border-dotted border-blue-500" : "border-transparent"}`}
       style={{
         left: `${x}px`,
         top: `${y}px`,
@@ -133,6 +140,11 @@ export default function Textbox({
       data-element-id={id}
       data-element-type="textbox"
     >
+      {/* Hover indicator (when not selected) */}
+      {!isSelected && (
+        <div className="absolute inset-0 border-2 border-gray-400 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+      )}
+
       {/* Rotation badge */}
       {rotation !== 0 && (
         <div className="absolute -top-6 right-0 bg-blue-500 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center font-semibold opacity-0 group-hover:opacity-100 transition-opacity">
@@ -150,9 +162,9 @@ export default function Textbox({
         onBlur={handleBlur}
         spellCheck={false}
         onMouseDown={(e) => e.stopPropagation()}
-        className={`p-2 text-base outline-none transition-all ${
-          isSelected ? "bg-blue-50" : "bg-transparent"
-        } rounded cursor-text wrap-break-word text-black select-text`}
+        className={`p-2 text-base outline-none transition-all rounded cursor-text wrap-break-word text-black select-text ${
+          fontFamily === "comic-sans" ? "font-comic-sans" : ""
+        } ${italic ? "italic" : ""}`}
         style={{
           fontSize: `${fontSize}px`,
           minHeight: "40px",
@@ -165,6 +177,34 @@ export default function Textbox({
       {/* Selection indicator and controls */}
       {isSelected && (
         <div className="absolute inset-0">
+          <button
+            className={`absolute -top-7 left-0 text-white text-xs rounded px-1.5 py-0.5 cursor-pointer pointer-events-auto transition-colors ${
+              italic
+                ? "bg-blue-700 hover:bg-blue-800"
+                : "bg-blue-500 hover:bg-blue-600"
+            }`}
+            onMouseDown={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleItalic?.(id);
+            }}
+          >
+            <span>
+              <Italic size={16} />
+            </span>
+          </button>
+          {/* Font toggle button */}
+          <button
+            className="absolute -top-7 left-8 bg-blue-500 text-white text-xs rounded px-1.5 py-0.5 cursor-pointer pointer-events-auto hover:bg-blue-600 transition-colors"
+            onMouseDown={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleFont?.(id);
+            }}
+          >
+            {fontFamily === "comic-sans" ? "Inter" : "Comic Sans"}
+          </button>
+
           {/* Rotate handle at bottom-right */}
           <div
             className="absolute bottom-0 right-0 w-3 h-3 bg-blue-500 rounded-full -mr-1.5 -mb-1.5 cursor-grab pointer-events-auto"

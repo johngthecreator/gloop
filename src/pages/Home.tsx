@@ -179,6 +179,29 @@ export default function Home() {
     setSelectedElementId(id);
   };
 
+  // Handle font toggle
+  const handleToggleFont = (id: string) => {
+    const newElements = elements.map((el) => {
+      if (el.id === id) {
+        const current = el.fontFamily || 'sans';
+        return { ...el, fontFamily: current === 'sans' ? 'comic-sans' as const : 'sans' as const };
+      }
+      return el;
+    });
+    updateElementsWithHistory(newElements);
+  };
+
+  // Handle italic toggle
+  const handleToggleItalic = (id: string) => {
+    const newElements = elements.map((el) => {
+      if (el.id === id) {
+        return { ...el, italic: !el.italic };
+      }
+      return el;
+    });
+    updateElementsWithHistory(newElements);
+  };
+
   // Handle canvas click to deselect
   const handleCanvasClick = () => {
     setSelectedElementId(undefined);
@@ -774,6 +797,8 @@ export default function Home() {
         onRotateHandleMouseDown={handleRotateHandleMouseDown}
         onMeasure={handleMeasure}
         onRotate={handleRotate}
+        onToggleFont={handleToggleFont}
+        onToggleItalic={handleToggleItalic}
         isDragging={isDragging}
       />
     </>
