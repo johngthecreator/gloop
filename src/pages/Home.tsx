@@ -219,6 +219,21 @@ export default function Home() {
     updateElementsWithHistory(newElements);
   };
 
+  // Handle text color toggle
+  const handleToggleTextColor = (id: string) => {
+    const newElements = elements.map((el) => {
+      if (el.id === id) {
+        const current = el.textColor || "black";
+        return {
+          ...el,
+          textColor: current === "black" ? ("white" as const) : ("black" as const),
+        };
+      }
+      return el;
+    });
+    updateElementsWithHistory(newElements);
+  };
+
   // Handle canvas click to deselect
   const handleCanvasClick = () => {
     setSelectedElementId(undefined);
@@ -816,6 +831,7 @@ export default function Home() {
         onRotate={handleRotate}
         onToggleFont={handleToggleFont}
         onToggleItalic={handleToggleItalic}
+        onToggleTextColor={handleToggleTextColor}
         isDragging={isDragging}
       />
     </>

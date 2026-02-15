@@ -14,6 +14,7 @@ export interface CanvasElementData {
   fontSize?: number;
   fontFamily?: 'comic-sans' | 'sans';
   italic?: boolean;
+  textColor?: 'black' | 'white';
 }
 
 interface CanvasElementProps extends CanvasElementData {
@@ -28,6 +29,7 @@ interface CanvasElementProps extends CanvasElementData {
   onRotateHandleMouseDown?: (e: React.MouseEvent<HTMLDivElement>) => void;
   onToggleFont?: (id: string) => void;
   onToggleItalic?: (id: string) => void;
+  onToggleTextColor?: (id: string) => void;
   isDragging?: boolean;
 }
 
@@ -44,6 +46,7 @@ export default function CanvasElement({
   fontSize = 16,
   fontFamily = 'sans',
   italic = false,
+  textColor = 'black',
   isSelected = false,
   onContentChange = () => {},
   onFocus = () => {},
@@ -55,6 +58,7 @@ export default function CanvasElement({
   onRotateHandleMouseDown,
   onToggleFont,
   onToggleItalic,
+  onToggleTextColor,
   isDragging = false,
 }: CanvasElementProps) {
   if (type === 'textbox') {
@@ -74,12 +78,14 @@ export default function CanvasElement({
         fontSize={fontSize}
         fontFamily={fontFamily}
         italic={italic}
+        textColor={textColor}
         onRotate={onRotate}
         onMeasure={onMeasure}
         onMouseDown={onMouseDown}
         onRotateHandleMouseDown={onRotateHandleMouseDown}
         onToggleFont={onToggleFont}
         onToggleItalic={onToggleItalic}
+        onToggleTextColor={onToggleTextColor}
         isDragging={isDragging}
       />
     );

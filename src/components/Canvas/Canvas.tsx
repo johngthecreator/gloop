@@ -20,6 +20,7 @@ interface CanvasProps {
   onMeasure?: (elementId: string, width: number, height: number) => void;
   onToggleFont?: (id: string) => void;
   onToggleItalic?: (id: string) => void;
+  onToggleTextColor?: (id: string) => void;
   isDragging?: boolean;
 }
 
@@ -38,6 +39,7 @@ const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
     onMeasure,
     onToggleFont,
     onToggleItalic,
+    onToggleTextColor,
     isDragging = false,
   },
   ref,
@@ -79,6 +81,7 @@ const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
             onRotateHandleMouseDown={onRotateHandleMouseDown?.(element.id)}
             onToggleFont={onToggleFont}
             onToggleItalic={onToggleItalic}
+            onToggleTextColor={onToggleTextColor}
             isDragging={isDragging}
           />
         ))}

@@ -1,6 +1,6 @@
 import { useRef, useEffect } from "react";
 import { useAutoSizing } from "../../hooks/useAutoSizing";
-import { Italic } from "lucide-react";
+import { Italic, Moon, Sun } from "lucide-react";
 
 interface TextboxProps {
   id: string;
@@ -21,8 +21,10 @@ interface TextboxProps {
   onRotateHandleMouseDown?: (e: React.MouseEvent<HTMLDivElement>) => void;
   onToggleFont?: (id: string) => void;
   onToggleItalic?: (id: string) => void;
+  onToggleTextColor?: (id: string) => void;
   fontFamily?: "comic-sans" | "sans";
   italic?: boolean;
+  textColor?: "black" | "white";
   isDragging?: boolean;
 }
 
@@ -46,10 +48,13 @@ export default function Textbox({
   onRotateHandleMouseDown,
   onToggleFont,
   onToggleItalic,
+  onToggleTextColor,
+  textColor = "black",
   isDragging = false,
 }: TextboxProps) {
   const contentRef = useRef<HTMLDivElement>(null);
   const hasAutoFocusedRef = useRef(false);
+  const mouseDownPosRef = useRef<{ x: number; y: number } | null>(null);
 
   // Auto-focus on newly created textboxes (when selected on first render)
   useEffect(() => {
@@ -115,8 +120,22 @@ export default function Textbox({
     }
   };
 
+  const handleOuterMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    mouseDownPosRef.current = { x: e.clientX, y: e.clientY };
+    onMouseDown?.(e);
+  };
+
   const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
     e.stopPropagation();
+    // If this was a click (not a drag) on an already-selected textbox, enter edit mode
+    if (mouseDownPosRef.current && isSelected && contentRef.current) {
+      const dx = e.clientX - mouseDownPosRef.current.x;
+      const dy = e.clientY - mouseDownPosRef.current.y;
+      if (Math.sqrt(dx * dx + dy * dy) < 5) {
+        contentRef.current.focus();
+      }
+    }
+    mouseDownPosRef.current = null;
   };
 
   return (
@@ -133,7 +152,7 @@ export default function Textbox({
         cursor: isDragging ? "grabbing" : "move",
         willChange: isDragging ? "transform" : "auto",
       }}
-      onMouseDown={onMouseDown}
+      onMouseDown={handleOuterMouseDown}
       onClick={handleClick}
       onKeyDown={handleKeyDown}
       tabIndex={0}
@@ -162,9 +181,9 @@ export default function Textbox({
         onBlur={handleBlur}
         spellCheck={false}
         onMouseDown={(e) => e.stopPropagation()}
-        className={`p-2 text-base outline-none transition-all rounded cursor-text wrap-break-word text-black select-text ${
-          fontFamily === "comic-sans" ? "font-comic-sans" : ""
-        } ${italic ? "italic" : ""}`}
+        className={`p-2 text-base outline-none transition-all rounded cursor-text wrap-break-word select-text ${
+          textColor === "white" ? "text-white" : "text-black"
+        } ${fontFamily === "comic-sans" ? "font-comic-sans" : ""} ${italic ? "italic" : ""}`}
         style={{
           fontSize: `${fontSize}px`,
           minHeight: "40px",
@@ -176,9 +195,27 @@ export default function Textbox({
 
       {/* Selection indicator and controls */}
       {isSelected && (
-        <div className="absolute inset-0">
+        <div className="absolute inset-0 pointer-events-none">
+          {/* Text color toggle button */}
           <button
             className={`absolute -top-7 left-0 text-white text-xs rounded px-1.5 py-0.5 cursor-pointer pointer-events-auto transition-colors ${
+              textColor === "white"
+                ? "bg-blue-700 hover:bg-blue-800"
+                : "bg-blue-500 hover:bg-blue-600"
+            }`}
+            onMouseDown={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleTextColor?.(id);
+            }}
+          >
+            <span>
+              {textColor === "black" ? <Moon size={16} /> : <Sun size={16} />}
+            </span>
+          </button>
+          {/* Italic toggle button */}
+          <button
+            className={`absolute -top-7 left-8 text-white text-xs rounded px-1.5 py-0.5 cursor-pointer pointer-events-auto transition-colors ${
               italic
                 ? "bg-blue-700 hover:bg-blue-800"
                 : "bg-blue-500 hover:bg-blue-600"
@@ -195,7 +232,7 @@ export default function Textbox({
           </button>
           {/* Font toggle button */}
           <button
-            className="absolute -top-7 left-8 bg-blue-500 text-white text-xs rounded px-1.5 py-0.5 cursor-pointer pointer-events-auto hover:bg-blue-600 transition-colors"
+            className="absolute -top-7 left-16 bg-blue-500 text-white text-xs rounded px-1.5 py-0.5 cursor-pointer pointer-events-auto hover:bg-blue-600 transition-colors"
             onMouseDown={(e) => e.stopPropagation()}
             onClick={(e) => {
               e.stopPropagation();
