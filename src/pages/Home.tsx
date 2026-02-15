@@ -339,8 +339,8 @@ export default function Home() {
     const canvas = canvasRef.current;
     if (canvas) {
       const params = new URLSearchParams(window.location.search);
-      const scrollX = params.get('scrollX');
-      const scrollY = params.get('scrollY');
+      const scrollX = params.get("scrollX");
+      const scrollY = params.get("scrollY");
 
       if (scrollX && scrollY) {
         // Restore from URL
@@ -365,17 +365,17 @@ export default function Home() {
       clearTimeout(timeoutId);
       timeoutId = window.setTimeout(() => {
         const params = new URLSearchParams(window.location.search);
-        params.set('scrollX', Math.round(canvas.scrollLeft).toString());
-        params.set('scrollY', Math.round(canvas.scrollTop).toString());
+        params.set("scrollX", Math.round(canvas.scrollLeft).toString());
+        params.set("scrollY", Math.round(canvas.scrollTop).toString());
 
         const newUrl = `${window.location.pathname}?${params.toString()}`;
-        window.history.replaceState({}, '', newUrl);
-      }, 1000);
+        window.history.replaceState({}, "", newUrl);
+      }, 500);
     };
 
-    canvas.addEventListener('scroll', handleScroll);
+    canvas.addEventListener("scroll", handleScroll);
     return () => {
-      canvas.removeEventListener('scroll', handleScroll);
+      canvas.removeEventListener("scroll", handleScroll);
       clearTimeout(timeoutId);
     };
   }, []);
@@ -388,7 +388,8 @@ export default function Home() {
 
       const atLeftEdge = canvas.scrollLeft === 0 && e.deltaX < 0;
       const atRightEdge =
-        canvas.scrollLeft >= canvas.scrollWidth - canvas.clientWidth && e.deltaX > 0;
+        canvas.scrollLeft >= canvas.scrollWidth - canvas.clientWidth &&
+        e.deltaX > 0;
 
       // Only prevent default at scroll boundaries to stop browser navigation
       if (atLeftEdge || atRightEdge) {
@@ -399,7 +400,9 @@ export default function Home() {
     const canvas = canvasRef.current;
     if (canvas) {
       // Use passive: false to allow preventDefault
-      canvas.addEventListener("wheel", preventSwipeNavigation, { passive: false });
+      canvas.addEventListener("wheel", preventSwipeNavigation, {
+        passive: false,
+      });
       return () => canvas.removeEventListener("wheel", preventSwipeNavigation);
     }
   }, []);
@@ -427,7 +430,8 @@ export default function Home() {
           e.clientX - rs.centerX,
         );
         const currentDistance = Math.sqrt(
-          Math.pow(e.clientX - rs.centerX, 2) + Math.pow(e.clientY - rs.centerY, 2),
+          Math.pow(e.clientX - rs.centerX, 2) +
+            Math.pow(e.clientY - rs.centerY, 2),
         );
 
         // Calculate rotation
@@ -446,8 +450,14 @@ export default function Home() {
 
         if (element.type === "image") {
           // Scale image dimensions
-          const newWidth = Math.max(50, (rs.elementStartWidth || 200) * scaleFactor);
-          const newHeight = Math.max(50, (rs.elementStartHeight || 200) * scaleFactor);
+          const newWidth = Math.max(
+            50,
+            (rs.elementStartWidth || 200) * scaleFactor,
+          );
+          const newHeight = Math.max(
+            50,
+            (rs.elementStartHeight || 200) * scaleFactor,
+          );
 
           if (domEl) {
             domEl.style.transform = `rotate(${newRotation}deg)`;
@@ -458,11 +468,16 @@ export default function Home() {
           pendingSizeRef.current = { width: newWidth, height: newHeight };
         } else if (element.type === "textbox") {
           // Scale font size
-          const newFontSize = Math.max(8, Math.min(200, (rs.elementStartFontSize || 16) * scaleFactor));
+          const newFontSize = Math.max(
+            8,
+            Math.min(200, (rs.elementStartFontSize || 16) * scaleFactor),
+          );
 
           if (domEl) {
             domEl.style.transform = `rotate(${newRotation}deg)`;
-            const contentDiv = domEl.querySelector('[contenteditable]') as HTMLElement;
+            const contentDiv = domEl.querySelector(
+              "[contenteditable]",
+            ) as HTMLElement;
             if (contentDiv) {
               contentDiv.style.fontSize = `${newFontSize}px`;
             }
@@ -539,7 +554,9 @@ export default function Home() {
         const finalRotation = pendingRotationRef.current % 360;
         const newElements = elements.map((el) => {
           if (el.id === rs.elementId) {
-            const updates: Partial<CanvasElementData> = { rotation: finalRotation };
+            const updates: Partial<CanvasElementData> = {
+              rotation: finalRotation,
+            };
             if (pendingSizeRef.current) {
               if (pendingSizeRef.current.width !== undefined) {
                 updates.width = pendingSizeRef.current.width;
@@ -565,7 +582,9 @@ export default function Home() {
         if (domEl) {
           domEl.style.width = "";
           domEl.style.height = "";
-          const contentDiv = domEl.querySelector('[contenteditable]') as HTMLElement;
+          const contentDiv = domEl.querySelector(
+            "[contenteditable]",
+          ) as HTMLElement;
           if (contentDiv) {
             contentDiv.style.fontSize = "";
           }
