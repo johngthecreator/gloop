@@ -1,6 +1,6 @@
 import { forwardRef } from "react";
 import type { CanvasElementData } from "./CanvasElement";
-import type { MarqueeState } from "../../pages/Home";
+import type { MarqueeState } from "../../types/canvas";
 import CanvasElement from "./CanvasElement";
 
 interface CanvasProps {
