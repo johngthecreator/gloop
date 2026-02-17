@@ -23,6 +23,8 @@ interface CanvasProps {
   onToggleFont?: (id: string) => void;
   onToggleItalic?: (id: string) => void;
   onToggleTextColor?: (id: string) => void;
+  onRemoveBackground?: (id: string) => void;
+  bgRemovalProcessingIds?: Set<string>;
   isDragging?: boolean;
   marqueeState?: MarqueeState | null;
 }
@@ -44,6 +46,8 @@ const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
     onToggleFont,
     onToggleItalic,
     onToggleTextColor,
+    onRemoveBackground,
+    bgRemovalProcessingIds,
     isDragging = false,
     marqueeState,
   },
@@ -98,6 +102,8 @@ const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
             onToggleFont={onToggleFont}
             onToggleItalic={onToggleItalic}
             onToggleTextColor={onToggleTextColor}
+            onRemoveBackground={onRemoveBackground}
+            isRemovingBackground={bgRemovalProcessingIds?.has(element.id)}
             isDragging={isDragging}
           />
         ))}

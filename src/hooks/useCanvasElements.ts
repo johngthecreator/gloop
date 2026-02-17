@@ -1,6 +1,7 @@
 import { useEffect, useCallback } from "react";
 import type { CanvasElementData } from "../types/canvas";
 import { db } from "../db";
+import { useBackgroundRemoval } from "./useBackgroundRemoval";
 
 interface UseCanvasElementsParams {
   elements: CanvasElementData[];
@@ -231,6 +232,50 @@ export function useCanvasElements({
     // Measurement callback for textbox auto-sizing (dimensions tracked via ResizeObserver)
   };
 
+  // Background removal
+  const { removeBackground, processingIds: bgRemovalProcessingIds } =
+    useBackgroundRemoval();
+
+  const handleRemoveBackground = async (id: string) => {
+    const element = elements.find((el) => el.id === id);
+    if (!element || element.type !== "image") return;
+
+    updateStatus("Removing background...", "info");
+
+    try {
+      // Get original blob from Dexie, or fetch from current src
+      let imageBlob: Blob;
+      const stored = await db.imageBlobs.get(id);
+      if (stored) {
+        imageBlob = stored.blob;
+      } else if (element.src) {
+        const response = await fetch(element.src);
+        imageBlob = await response.blob();
+      } else {
+        throw new Error("No image data found");
+      }
+
+      const resultBlob = await removeBackground(id, imageBlob);
+
+      // Persist the new blob
+      await db.imageBlobs.put({ id, blob: resultBlob, storedAt: Date.now() });
+
+      // Swap src
+      const newUrl = URL.createObjectURL(resultBlob);
+      if (element.src?.startsWith("blob:")) {
+        URL.revokeObjectURL(element.src);
+      }
+
+      const newElements = elements.map((el) =>
+        el.id === id ? { ...el, src: newUrl } : el,
+      );
+      updateElementsWithHistory(newElements);
+      updateStatus("Background removed", "success");
+    } catch {
+      updateStatus("Failed to remove background", "error");
+    }
+  };
+
   // Cleanup unreferenced images
   const handleCleanupUnreferencedImages = useCallback(async () => {
     const referencedIds = new Set<string>();
@@ -295,5 +340,7 @@ export function useCanvasElements({
     handleRotate,
     handleMeasure,
     handleCleanupUnreferencedImages,
+    handleRemoveBackground,
+    bgRemovalProcessingIds,
   };
 }

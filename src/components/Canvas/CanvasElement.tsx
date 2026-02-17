@@ -30,6 +30,8 @@ interface CanvasElementProps extends CanvasElementData {
   onToggleFont?: (id: string) => void;
   onToggleItalic?: (id: string) => void;
   onToggleTextColor?: (id: string) => void;
+  onRemoveBackground?: (id: string) => void;
+  isRemovingBackground?: boolean;
   isDragging?: boolean;
 }
 
@@ -59,6 +61,8 @@ export default function CanvasElement({
   onToggleFont,
   onToggleItalic,
   onToggleTextColor,
+  onRemoveBackground,
+  isRemovingBackground = false,
   isDragging = false,
 }: CanvasElementProps) {
   if (type === 'textbox') {
@@ -106,6 +110,8 @@ export default function CanvasElement({
         onRotate={onRotate}
         onMouseDown={onMouseDown}
         onRotateHandleMouseDown={onRotateHandleMouseDown}
+        onRemoveBackground={onRemoveBackground}
+        isRemovingBackground={isRemovingBackground}
         isDragging={isDragging}
       />
     );

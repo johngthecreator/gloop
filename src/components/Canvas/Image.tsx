@@ -1,3 +1,5 @@
+import { Scissors, Loader2 } from "lucide-react";
+
 interface ImageProps {
   id: string;
   src: string;
@@ -11,6 +13,8 @@ interface ImageProps {
   onRotate?: (id: string, deltaRotation: number) => void;
   onMouseDown?: (e: React.MouseEvent<HTMLDivElement>) => void;
   onRotateHandleMouseDown?: (e: React.MouseEvent<HTMLDivElement>) => void;
+  onRemoveBackground?: (id: string) => void;
+  isRemovingBackground?: boolean;
   isDragging?: boolean;
 }
 
@@ -27,6 +31,8 @@ export default function Image({
   onRotate,
   onMouseDown,
   onRotateHandleMouseDown,
+  onRemoveBackground,
+  isRemovingBackground = false,
   isDragging = false,
 }: ImageProps) {
   const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -81,9 +87,40 @@ export default function Image({
         draggable={false}
       />
 
-      {/* Selection indicator */}
+      {/* Processing overlay */}
+      {isRemovingBackground && (
+        <div className="absolute inset-0 bg-black/40 rounded flex items-center justify-center">
+          <Loader2 size={32} className="animate-spin text-white" />
+        </div>
+      )}
+
+      {/* Selection indicator and controls */}
       {isSelected && (
         <div className="absolute inset-0">
+          {/* Remove background button */}
+          <button
+            className={`absolute -top-7 left-0 text-white text-xs rounded px-1.5 py-0.5 cursor-pointer pointer-events-auto transition-colors ${
+              isRemovingBackground
+                ? "bg-blue-700"
+                : "bg-blue-500 hover:bg-blue-600"
+            }`}
+            onMouseDown={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopPropagation();
+              if (!isRemovingBackground) {
+                onRemoveBackground?.(id);
+              }
+            }}
+            disabled={isRemovingBackground}
+            title="Remove background"
+          >
+            {isRemovingBackground ? (
+              <Loader2 size={16} className="animate-spin" />
+            ) : (
+              <Scissors size={16} />
+            )}
+          </button>
+
           {/* Rotate handle at bottom-right */}
           <div
             className="absolute bottom-0 right-0 w-3 h-3 bg-blue-500 rounded-full -mr-1.5 -mb-1.5 cursor-grab pointer-events-auto"

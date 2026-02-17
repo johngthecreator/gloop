@@ -79,6 +79,8 @@ export default function Home() {
     handleRotate,
     handleMeasure,
     handleCleanupUnreferencedImages,
+    handleRemoveBackground,
+    bgRemovalProcessingIds,
   } = useCanvasElements({
     elements,
     setElements,
@@ -146,6 +148,8 @@ export default function Home() {
         onToggleFont={handleToggleFont}
         onToggleItalic={handleToggleItalic}
         onToggleTextColor={handleToggleTextColor}
+        onRemoveBackground={handleRemoveBackground}
+        bgRemovalProcessingIds={bgRemovalProcessingIds}
         isDragging={isDragging}
         marqueeState={marqueeState}
       />
