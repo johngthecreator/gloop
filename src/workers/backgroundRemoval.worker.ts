@@ -5,8 +5,9 @@ import {
   env,
 } from "@huggingface/transformers";
 
-// Only use remote models (HuggingFace Hub)
+// Only use remote models — proxy through our own origin to avoid CORS issues
 env.allowLocalModels = false;
+env.remoteHost = `${self.location.origin}/hf-proxy`;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let model: any = null;
