@@ -7,7 +7,7 @@ import {
 
 // Only use remote models — proxy through our own origin to avoid CORS issues
 env.allowLocalModels = false;
-env.remoteHost = `${self.location.origin}/hf-proxy`;
+env.remoteHost = `${self.location.origin}/hf-proxy/https://huggingface.co`;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let model: any = null;

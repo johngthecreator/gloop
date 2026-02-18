@@ -5,7 +5,9 @@ interface Env {
 export const onRequest: PagesFunction<Env> = async (context) => {
   const { request, params } = context;
   const path = Array.isArray(params.path) ? params.path.join("/") : params.path || "";
-  const hfUrl = `https://huggingface.co/${path}`;
+
+  // Extract the full URL from the path (transformers lib sends: /hf-proxy/https://huggingface.co/...)
+  const hfUrl = path.startsWith("https://") ? path : `https://huggingface.co/${path}`;
 
   try {
     const hfResponse = await fetch(hfUrl, {
