@@ -63,6 +63,8 @@ const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
   },
   ref,
 ) {
+  const CANVAS_SIZE = 10000;
+
   const handleCanvasClick = () => {
     // Clicks on elements are stopped via stopPropagation,
     // so if we reach here it's a canvas background click
@@ -94,66 +96,79 @@ const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
       {/* Canvas background grid (optional visual aid) */}
       <div className="absolute inset-0 opacity-5 pointer-events-none" />
 
-      {/* Render all canvas elements - infinite canvas size */}
-      <div className="relative" style={{ width: "10000px", height: "10000px", zoom }}>
-        {elements.map((element) => (
-          <CanvasElement
-            key={element.id}
-            {...element}
-            isSelected={selectedElementIds.has(element.id)}
-            onContentChange={onElementContentChange}
-            onFocus={onElementFocus}
-            onBlur={onElementBlur}
-            onSelect={onElementSelect}
-            onRotate={onRotate}
-            onMeasure={onMeasure}
-            onMouseDown={onElementMouseDown?.(element.id)}
-            onRotateHandleMouseDown={onRotateHandleMouseDown?.(element.id)}
-            onToggleFont={onToggleFont}
-            onToggleItalic={onToggleItalic}
-            onToggleTextColor={onToggleTextColor}
-            onRemoveBackground={onRemoveBackground}
-            onCropCommit={onCropImage}
-            isRemovingBackground={bgRemovalProcessingIds?.has(element.id)}
-            isDragging={isDragging}
-            onSetShapeFillColor={onSetShapeFillColor}
-            onStartShapeEyedropper={onStartShapeEyedropper}
-            eyedropperTargetId={eyedropperTargetId}
-          />
-        ))}
-
-        {/* Marquee selection overlay */}
-        {marqueeRect && (
-          <div
-            className="absolute bg-blue-500/10 border border-blue-500 pointer-events-none"
-            style={{
-              left: marqueeRect.left,
-              top: marqueeRect.top,
-              width: marqueeRect.width,
-              height: marqueeRect.height,
-            }}
-          />
-        )}
-      </div>
-
-      {/* Empty state message - positioned at center of canvas */}
-      {elements.length === 0 && (
+      {/* Render all canvas elements - scaled via transform for smooth zoom */}
+      <div
+        className="relative"
+        style={{ width: `${CANVAS_SIZE * zoom}px`, height: `${CANVAS_SIZE * zoom}px` }}
+      >
         <div
-          className="absolute w-1/2 flex items-center justify-center pointer-events-none"
+          className="absolute left-0 top-0"
           style={{
-            left: "5000px",
-            top: "5000px",
-            transform: "translate(-50%, -50%)",
+            width: `${CANVAS_SIZE}px`,
+            height: `${CANVAS_SIZE}px`,
+            transform: `scale(${zoom})`,
+            transformOrigin: "0 0",
           }}
         >
-          <div className="text-center text-gray-400">
-            <p className="text-lg font-semibold">Canvas is empty</p>
-            <p className="text-sm">
-              Click "Add Textbox" or "Add Shape" to get started
-            </p>
-          </div>
+          {elements.map((element) => (
+            <CanvasElement
+              key={element.id}
+              {...element}
+              isSelected={selectedElementIds.has(element.id)}
+              onContentChange={onElementContentChange}
+              onFocus={onElementFocus}
+              onBlur={onElementBlur}
+              onSelect={onElementSelect}
+              onRotate={onRotate}
+              onMeasure={onMeasure}
+              onMouseDown={onElementMouseDown?.(element.id)}
+              onRotateHandleMouseDown={onRotateHandleMouseDown?.(element.id)}
+              onToggleFont={onToggleFont}
+              onToggleItalic={onToggleItalic}
+              onToggleTextColor={onToggleTextColor}
+              onRemoveBackground={onRemoveBackground}
+              onCropCommit={onCropImage}
+              isRemovingBackground={bgRemovalProcessingIds?.has(element.id)}
+              isDragging={isDragging}
+              onSetShapeFillColor={onSetShapeFillColor}
+              onStartShapeEyedropper={onStartShapeEyedropper}
+              eyedropperTargetId={eyedropperTargetId}
+            />
+          ))}
+
+          {/* Marquee selection overlay */}
+          {marqueeRect && (
+            <div
+              className="absolute bg-blue-500/10 border border-blue-500 pointer-events-none"
+              style={{
+                left: marqueeRect.left,
+                top: marqueeRect.top,
+                width: marqueeRect.width,
+                height: marqueeRect.height,
+              }}
+            />
+          )}
+
+          {/* Empty state message - positioned at center of canvas */}
+          {elements.length === 0 && (
+            <div
+              className="absolute w-1/2 flex items-center justify-center pointer-events-none"
+              style={{
+                left: `${CANVAS_SIZE / 2}px`,
+                top: `${CANVAS_SIZE / 2}px`,
+                transform: "translate(-50%, -50%)",
+              }}
+            >
+              <div className="text-center text-gray-400">
+                <p className="text-lg font-semibold">Canvas is empty</p>
+                <p className="text-sm">
+                  Click "Add Textbox" or "Add Shape" to get started
+                </p>
+              </div>
+            </div>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 });

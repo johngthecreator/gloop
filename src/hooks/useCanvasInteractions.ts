@@ -12,6 +12,7 @@ interface UseCanvasInteractionsParams {
   setSelectedElementIds: React.Dispatch<React.SetStateAction<Set<string>>>;
   updateElementsWithHistory: (newElements: CanvasElementData[]) => void;
   canvasRef: React.RefObject<HTMLDivElement | null>;
+  zoom: number;
   updateStatus: (
     message: string,
     type?: "info" | "success" | "error" | "warning",
@@ -24,6 +25,7 @@ export function useCanvasInteractions({
   setSelectedElementIds,
   updateElementsWithHistory,
   canvasRef,
+  zoom,
   updateStatus,
 }: UseCanvasInteractionsParams) {
   const [dragState, setDragState] = useState<DragState | null>(null);
@@ -52,11 +54,11 @@ export function useCanvasInteractions({
       if (!canvas) return { x: 0, y: 0 };
       const rect = canvas.getBoundingClientRect();
       return {
-        x: e.clientX - rect.left + canvas.scrollLeft,
-        y: e.clientY - rect.top + canvas.scrollTop,
+        x: (e.clientX - rect.left + canvas.scrollLeft) / zoom,
+        y: (e.clientY - rect.top + canvas.scrollTop) / zoom,
       };
     },
-    [canvasRef],
+    [canvasRef, zoom],
   );
 
   // Helper: compute marquee rect (normalized so x/y is top-left)
@@ -83,8 +85,8 @@ export function useCanvasInteractions({
         ) as HTMLElement;
         if (domEl) {
           const domRect = domEl.getBoundingClientRect();
-          elW = elW || domRect.width;
-          elH = elH || domRect.height;
+          elW = elW || domRect.width / zoom;
+          elH = elH || domRect.height / zoom;
         } else {
           elW = elW || 100;
           elH = elH || 30;
@@ -98,7 +100,7 @@ export function useCanvasInteractions({
         el.y > rect.y + rect.h
       );
     },
-    [],
+    [zoom],
   );
 
   // Handle canvas click to deselect (skip if a real marquee just finished)
@@ -167,9 +169,7 @@ export function useCanvasInteractions({
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left + canvas.scrollLeft;
-    const y = e.clientY - rect.top + canvas.scrollTop;
+    const { x, y } = getCanvasCoords(e.nativeEvent);
 
     setMarqueeState({ startX: x, startY: y, currentX: x, currentY: y });
     setSelectedElementIds(new Set());
@@ -336,28 +336,26 @@ export function useCanvasInteractions({
 
       // Drag threshold: only start dragging if moved more than 5 pixels
       if (dragState && !isDragging) {
-        const deltaX = e.clientX - dragState.startX;
-        const deltaY = e.clientY - dragState.startY;
-        const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+        const deltaXScreen = e.clientX - dragState.startX;
+        const deltaYScreen = e.clientY - dragState.startY;
+        const distance = Math.sqrt(
+          deltaXScreen * deltaXScreen + deltaYScreen * deltaYScreen,
+        );
 
         if (distance > 5) {
           setIsDragging(true);
         } else {
-          if (canvasRef.current) {
-            const rect = canvasRef.current.getBoundingClientRect();
-            setCursorPosition({
-              x: e.clientX - rect.left + canvasRef.current.scrollLeft,
-              y: e.clientY - rect.top + canvasRef.current.scrollTop,
-            });
-          }
+          setCursorPosition(getCanvasCoords(e));
           return;
         }
       }
 
       // Handle multi-drag with smooth mousemove
       if (isDragging && dragState) {
-        const deltaX = e.clientX - dragState.startX;
-        const deltaY = e.clientY - dragState.startY;
+        const deltaXScreen = e.clientX - dragState.startX;
+        const deltaYScreen = e.clientY - dragState.startY;
+        const deltaX = deltaXScreen / zoom;
+        const deltaY = deltaYScreen / zoom;
 
         const hasImages = dragState.elementIds.some((id) => {
           const el = elements.find((e) => e.id === id);
@@ -375,7 +373,7 @@ export function useCanvasInteractions({
           if (domEl) {
             const element = elements.find((el) => el.id === id);
             const rotation = element?.rotation || 0;
-            if (hasImages && element?.type === "textbox") {
+            if (hasImages && (element?.type === "textbox" || element?.type === "shape")) {
               domEl.style.transition =
                 "transform 150ms cubic-bezier(0.4, 0, 0.2, 1)";
             }
@@ -393,13 +391,7 @@ export function useCanvasInteractions({
 
         dragPositionsRef.current = newPositions;
       } else if (!dragState && !marqueeState) {
-        if (canvasRef.current) {
-          const rect = canvasRef.current.getBoundingClientRect();
-          setCursorPosition({
-            x: e.clientX - rect.left + canvasRef.current.scrollLeft,
-            y: e.clientY - rect.top + canvasRef.current.scrollTop,
-          });
-        }
+        setCursorPosition(getCanvasCoords(e));
       }
     };
 
@@ -526,7 +518,16 @@ export function useCanvasInteractions({
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("mouseup", handleMouseUp);
     };
-  }, [isDragging, dragState, elements, marqueeState]);
+  }, [
+    isDragging,
+    dragState,
+    elements,
+    marqueeState,
+    getCanvasCoords,
+    getMarqueeRect,
+    elementIntersectsRect,
+    zoom,
+  ]);
 
   return {
     isDragging,

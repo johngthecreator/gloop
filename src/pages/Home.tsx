@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback } from "react";
 import Toolbar from "../components/Toolbar/Toolbar";
 import Canvas from "../components/Canvas/Canvas";
 import ZoomControls from "../components/Canvas/ZoomControls";
@@ -64,6 +64,7 @@ export default function Home() {
     setSelectedElementIds,
     updateElementsWithHistory,
     canvasRef,
+    zoom,
     updateStatus,
   });
 
@@ -97,6 +98,7 @@ export default function Home() {
     history,
     canvasRef,
     cursorPosition,
+    zoom,
     updateStatus,
   });
 
@@ -119,21 +121,43 @@ export default function Home() {
   // Auto-save to IndexedDB
   useCanvasAutoSave({ elements, saveElements });
 
-  const handleZoom = (delta: number) => {
+  const applyZoom = useCallback((computeNext: (prev: number) => number) => {
     const canvas = canvasRef.current;
-    const newZoom = Math.min(3, Math.max(0.25, Math.round((zoom + delta) * 100) / 100));
-    if (!canvas || newZoom === zoom) return;
+    if (!canvas) return;
 
     const centerX = canvas.scrollLeft + canvas.clientWidth / 2;
     const centerY = canvas.scrollTop + canvas.clientHeight / 2;
 
-    setZoom(newZoom);
+    setZoom((prevZoom) => {
+      const unclamped = computeNext(prevZoom);
+      const nextZoom = Math.min(3, Math.max(0.25, unclamped));
+      if (nextZoom === prevZoom) return prevZoom;
 
-    requestAnimationFrame(() => {
-      canvas.scrollLeft = (centerX * newZoom / zoom) - canvas.clientWidth / 2;
-      canvas.scrollTop = (centerY * newZoom / zoom) - canvas.clientHeight / 2;
+      requestAnimationFrame(() => {
+        canvas.scrollLeft = (centerX * nextZoom / prevZoom) - canvas.clientWidth / 2;
+        canvas.scrollTop = (centerY * nextZoom / prevZoom) - canvas.clientHeight / 2;
+      });
+
+      return nextZoom;
     });
-  };
+  }, []);
+
+  const handleZoomSnap = useCallback(
+    (direction: "in" | "out") => {
+      const step = 0.25;
+      const epsilon = 1e-6;
+      applyZoom((prev) => {
+        if (direction === "in") {
+          const up = Math.ceil((prev + epsilon) / step) * step;
+          return up <= prev + epsilon ? prev + step : up;
+        }
+        const down = Math.floor((prev - epsilon) / step) * step;
+        return down >= prev - epsilon ? prev - step : down;
+      });
+    },
+    [applyZoom],
+  );
+
 
   return (
     <>
@@ -185,8 +209,8 @@ export default function Home() {
 
       <ZoomControls
         zoom={zoom}
-        onZoomIn={() => handleZoom(0.25)}
-        onZoomOut={() => handleZoom(-0.25)}
+        onZoomIn={() => handleZoomSnap("in")}
+        onZoomOut={() => handleZoomSnap("out")}
       />
     </>
   );

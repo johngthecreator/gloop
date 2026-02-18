@@ -14,6 +14,7 @@ interface UseCanvasElementsParams {
   history: CanvasElementData[][];
   canvasRef: React.RefObject<HTMLDivElement | null>;
   cursorPosition: { x: number; y: number };
+  zoom: number;
   updateStatus: (
     message: string,
     type?: "info" | "success" | "error" | "warning",
@@ -36,6 +37,7 @@ export function useCanvasElements({
   history,
   canvasRef,
   cursorPosition,
+  zoom,
   updateStatus,
 }: UseCanvasElementsParams) {
   const [eyedropperTargetId, setEyedropperTargetId] = useState<string | null>(
@@ -69,10 +71,10 @@ export function useCanvasElements({
 
     const canvas = canvasRef.current;
     const x = canvas
-      ? canvas.scrollLeft + canvas.clientWidth / 2
+      ? (canvas.scrollLeft + canvas.clientWidth / 2) / zoom
       : 5000 + elements.length * 10;
     const y = canvas
-      ? canvas.scrollTop + canvas.clientHeight / 2
+      ? (canvas.scrollTop + canvas.clientHeight / 2) / zoom
       : 5000 + elements.length * 10;
 
     const newElement: CanvasElementData = {
@@ -95,10 +97,10 @@ export function useCanvasElements({
 
     const canvas = canvasRef.current;
     const x = canvas
-      ? canvas.scrollLeft + canvas.clientWidth / 2
+      ? (canvas.scrollLeft + canvas.clientWidth / 2) / zoom
       : 5000 + elements.length * 10;
     const y = canvas
-      ? canvas.scrollTop + canvas.clientHeight / 2
+      ? (canvas.scrollTop + canvas.clientHeight / 2) / zoom
       : 5000 + elements.length * 10;
 
     const { width, height } = SHAPE_DIMS[shape];
