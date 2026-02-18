@@ -1,6 +1,6 @@
 import Textbox from './Textbox';
 import Image from './Image';
-import Shape from './Shape';
+import Shape, { type ShapeKind } from './Shape';
 
 export interface CropRect {
   x: number;
@@ -26,7 +26,7 @@ export interface CanvasElementData {
   naturalWidth?: number;
   naturalHeight?: number;
   crop?: CropRect;
-  shape?: 'rectangle' | 'square' | 'circle' | 'triangle';
+  shape?: ShapeKind;
   fillColor?: string;
 }
 

@@ -1,6 +1,6 @@
 import { useEffect, useCallback, useRef, useState } from "react";
 import type { CanvasElementData } from "../types/canvas";
-import type { ShapeKind } from "../components/Canvas/Shape";
+import { DEFAULT_FILL, type ShapeKind } from "../components/Canvas/Shape";
 import type { CropRect } from "../components/Canvas/CanvasElement";
 import { db } from "../db";
 import { useBackgroundRemoval } from "./useBackgroundRemoval";
@@ -19,6 +19,13 @@ interface UseCanvasElementsParams {
     type?: "info" | "success" | "error" | "warning",
   ) => void;
 }
+
+const SHAPE_DIMS: Record<ShapeKind, { width: number; height: number }> = {
+  rectangle: { width: 200, height: 140 },
+  square: { width: 160, height: 160 },
+  circle: { width: 160, height: 160 },
+  triangle: { width: 200, height: 180 },
+};
 
 export function useCanvasElements({
   elements,
@@ -94,23 +101,8 @@ export function useCanvasElements({
       ? canvas.scrollTop + canvas.clientHeight / 2
       : 5000 + elements.length * 10;
 
-    let width = 200;
-    let height = 140;
-    let fillColor = "#FDE68A";
-
-    if (shape === "square") {
-      width = 160;
-      height = 160;
-      fillColor = "#C7D2FE";
-    } else if (shape === "circle") {
-      width = 160;
-      height = 160;
-      fillColor = "#A7F3D0";
-    } else if (shape === "triangle") {
-      width = 200;
-      height = 180;
-      fillColor = "#FBCFE8";
-    }
+    const { width, height } = SHAPE_DIMS[shape];
+    const fillColor = DEFAULT_FILL[shape];
 
     const newElement: CanvasElementData = {
       id: newId,

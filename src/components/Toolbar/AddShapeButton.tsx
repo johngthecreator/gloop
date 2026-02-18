@@ -36,7 +36,7 @@ export default function AddShapeButton({
       <button
         onClick={() => setOpen((v) => !v)}
         disabled={disabled}
-        className="p-2 bg-emerald-500 text-white rounded-xl hover:bg-emerald-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+        className="p-2 bg-violet-500 text-white rounded-xl hover:bg-violet-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
         title="Add a shape"
         aria-haspopup="menu"
         aria-expanded={open}

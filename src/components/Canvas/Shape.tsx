@@ -22,7 +22,7 @@ interface ShapeProps {
   isDragging?: boolean;
 }
 
-const DEFAULT_FILL: Record<ShapeKind, string> = {
+export const DEFAULT_FILL: Record<ShapeKind, string> = {
   rectangle: "#FDE68A",
   square: "#C7D2FE",
   circle: "#A7F3D0",
@@ -126,7 +126,7 @@ export default function Shape({
     <div
       className={`absolute group select-none ${
         isSelected ? "ring-2 ring-blue-500" : "hover:ring-2 hover:ring-gray-400"
-      } ${isDragging ? "opacity-70" : ""}`}
+      } rounded ${isDragging ? "opacity-70" : ""}`}
       style={{
         left: `${x}px`,
         top: `${y}px`,
@@ -190,7 +190,7 @@ export default function Shape({
           </div>
 
           <div
-            className="absolute -bottom-6 -right-6 w-3 h-3 bg-blue-500 rounded-full cursor-grab pointer-events-auto"
+            className="absolute bottom-0 right-0 w-3 h-3 bg-blue-500 rounded-full -mr-1.5 -mb-1.5 cursor-grab pointer-events-auto"
             onMouseDown={(e) => {
               e.stopPropagation();
               onRotateHandleMouseDown?.(e);
