@@ -11,8 +11,7 @@ export class Room implements DurableObject {
       return new Response('Expected WebSocket', { status: 426 })
     }
 
-    const websockets = this.state.getWebSockets()
-    if (websockets.length >= 2) {
+    if (this.state.getWebSockets().length >= 2) {
       return new Response('Room is full', { status: 409 })
     }
 
@@ -22,28 +21,56 @@ export class Room implements DurableObject {
     return new Response(null, { status: 101, webSocket: pair[0] })
   }
 
-  async webSocketMessage(ws: WebSocket, message: string | ArrayBuffer) {
+  // Called after the WebSocket handshake completes. Assign roles so the
+  // clients never race to become host — the server decides.
+  webSocketOpen(ws: WebSocket) {
     const peers = this.state.getWebSockets()
-    for (const peer of peers) {
+    if (peers.length === 1) {
+      // First to connect is the host — tell them to wait for a joiner.
+      ws.send(JSON.stringify({ type: 'role', role: 'host' }))
+    } else {
+      // Second client is the joiner. Tell them their role, then wake the host.
+      ws.send(JSON.stringify({ type: 'role', role: 'joiner' }))
+      for (const peer of peers) {
+        if (peer !== ws) {
+          peer.send(JSON.stringify({ type: 'peer-connected' }))
+        }
+      }
+    }
+  }
+
+  // Pure relay: forward any message from one peer to the other.
+  webSocketMessage(ws: WebSocket, message: string | ArrayBuffer) {
+    for (const peer of this.state.getWebSockets()) {
       if (peer !== ws) {
         peer.send(typeof message === 'string' ? message : message)
       }
     }
   }
 
-  async webSocketClose(ws: WebSocket, _code: number, _reason: string, _wasClean: boolean) {
-    ws.close()
-    const remaining = this.state.getWebSockets()
-    for (const peer of remaining) {
-      peer.send(JSON.stringify({ type: 'peer-disconnected' }))
+  // Do NOT call ws.close() here — the socket is already closing when this fires.
+  // Filter out the closing socket before notifying the remaining peer.
+  webSocketClose(ws: WebSocket) {
+    for (const peer of this.state.getWebSockets()) {
+      if (peer !== ws) {
+        try {
+          peer.send(JSON.stringify({ type: 'peer-disconnected' }))
+        } catch {
+          // Remaining peer may also be closing — ignore.
+        }
+      }
     }
   }
 
-  async webSocketError(ws: WebSocket, _error: unknown) {
-    ws.close()
-    const remaining = this.state.getWebSockets()
-    for (const peer of remaining) {
-      peer.send(JSON.stringify({ type: 'peer-disconnected' }))
+  webSocketError(ws: WebSocket) {
+    for (const peer of this.state.getWebSockets()) {
+      if (peer !== ws) {
+        try {
+          peer.send(JSON.stringify({ type: 'peer-disconnected' }))
+        } catch {
+          // ignore
+        }
+      }
     }
   }
 }

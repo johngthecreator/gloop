@@ -3,6 +3,7 @@ import { X, Trash2, Copy, Check, Link, Wifi, WifiOff } from "lucide-react";
 
 interface CoopProps {
   connected: boolean;
+  hosting: boolean;
   isHost: boolean;
   roomId: string;
   signalingUrl: string;
@@ -28,6 +29,7 @@ function generateCode(): string {
 
 function CoopSection({
   connected,
+  hosting,
   isHost,
   roomId,
   signalingUrl,
@@ -53,6 +55,41 @@ function CoopSection({
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   }, [shareLink]);
+
+  // Hosting but peer hasn't joined yet — make this state very obvious.
+  if (hosting && !connected) {
+    return (
+      <div className="space-y-3">
+        <div className="flex items-center gap-2 text-sm font-medium text-indigo-600">
+          <span className="relative flex h-2.5 w-2.5">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75" />
+            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-indigo-500" />
+          </span>
+          <span>Hosting · waiting for someone to join</span>
+        </div>
+
+        <div className="text-center font-mono text-2xl font-bold tracking-[0.3em] py-2 bg-indigo-50 rounded-xl text-indigo-800 border border-indigo-100">
+          {roomId}
+        </div>
+
+        <button
+          onClick={copyLink}
+          className="flex items-center gap-2 w-full px-4 py-2.5 bg-indigo-50 hover:bg-indigo-100 rounded-xl text-indigo-700 text-sm transition-colors"
+        >
+          {copied ? <Check size={15} /> : <Copy size={15} />}
+          {copied ? "Link copied!" : "Copy invite link"}
+        </button>
+
+        <button
+          onClick={onDisconnect}
+          className="flex items-center gap-2 w-full px-4 py-2.5 bg-gray-100 hover:bg-gray-200 rounded-xl text-gray-600 text-sm transition-colors"
+        >
+          <WifiOff size={15} />
+          Stop hosting
+        </button>
+      </div>
+    );
+  }
 
   if (connected) {
     return (

@@ -137,6 +137,7 @@ export default function Home() {
   // ── Co-op (WebRTC) ──────────────────────────────────────────────────
   const {
     connected: coopConnected,
+    hosting: coopHosting,
     isHost: coopIsHost,
     sendEvent,
     onEvent,
@@ -250,6 +251,7 @@ export default function Home() {
           onCleanupImages={handleCleanupUnreferencedImages}
           coop={{
             connected: coopConnected,
+            hosting: coopHosting,
             isHost: coopIsHost,
             roomId,
             signalingUrl,
