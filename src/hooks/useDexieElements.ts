@@ -16,7 +16,10 @@ export function useDexieElements(
           const elementsWithUrls = await Promise.all(
             storedElements.map(async (el) => {
               if (el.type === 'image' && el.id) {
-                const imageBlob = await db.imageBlobs.get(el.id);
+                // Use blobKey if present so we load the correct version of the
+                // blob (e.g. after background removal stores under a new key).
+                const lookupKey = el.blobKey || el.id;
+                const imageBlob = await db.imageBlobs.get(lookupKey);
                 if (imageBlob) {
                   return {
                     ...el,

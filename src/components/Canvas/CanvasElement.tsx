@@ -19,6 +19,10 @@ export interface CanvasElementData {
   rotation?: number;
   content?: string;
   src?: string;
+  // Key used to look up the image blob in db.imageBlobs. Defaults to `id` if
+  // not set, but background removal stores new versions under a fresh key so
+  // that the original blob is preserved and undo can restore it.
+  blobKey?: string;
   fontSize?: number;
   fontFamily?: 'comic-sans' | 'sans';
   italic?: boolean;
