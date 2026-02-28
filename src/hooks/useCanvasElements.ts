@@ -441,9 +441,11 @@ export function useCanvasElements({
     updateStatus("Removing background...", "info");
 
     try {
-      // Get original blob from Dexie, or fetch from current src
+      // Look up the blob using the element's blobKey (or fall back to its id)
+      // so we always process the correct version of the image.
+      const lookupKey = element.blobKey || id;
       let imageBlob: Blob;
-      const stored = await db.imageBlobs.get(id);
+      const stored = await db.imageBlobs.get(lookupKey);
       if (stored) {
         imageBlob = stored.blob;
       } else if (element.src) {
@@ -455,17 +457,21 @@ export function useCanvasElements({
 
       const resultBlob = await removeBackground(id, imageBlob);
 
-      // Persist the new blob
-      await db.imageBlobs.put({ id, blob: resultBlob, storedAt: Date.now() });
+      // Store the processed blob under a NEW unique key so the original blob
+      // is preserved. This lets undo restore the pre-removal version correctly.
+      const newBlobKey = `${id}-${Date.now()}`;
+      await db.imageBlobs.put({
+        id: newBlobKey,
+        blob: resultBlob,
+        storedAt: Date.now(),
+      });
 
-      // Swap src
+      // Create the new URL. Do NOT revoke the old URL — it may still be
+      // referenced by a prior history entry and undo needs it to be valid.
       const newUrl = URL.createObjectURL(resultBlob);
-      if (element.src?.startsWith("blob:")) {
-        URL.revokeObjectURL(element.src);
-      }
 
       const newElements = elements.map((el) =>
-        el.id === id ? { ...el, src: newUrl } : el,
+        el.id === id ? { ...el, src: newUrl, blobKey: newBlobKey } : el,
       );
       updateElementsWithHistory(newElements);
       updateStatus("Background removed", "success");
@@ -500,11 +506,14 @@ export function useCanvasElements({
 
   // Cleanup unreferenced images
   const handleCleanupUnreferencedImages = useCallback(async () => {
-    const referencedIds = new Set<string>();
+    // Collect all blob keys referenced across the entire history so we don't
+    // delete anything that an undo/redo state still needs.
+    const referencedBlobKeys = new Set<string>();
     for (const entry of history) {
       for (const el of entry) {
         if (el.type === "image") {
-          referencedIds.add(el.id);
+          // Use blobKey if present, otherwise fall back to the element id
+          referencedBlobKeys.add(el.blobKey || el.id);
         }
       }
     }
@@ -513,13 +522,7 @@ export function useCanvasElements({
     let cleanedCount = 0;
 
     for (const blob of storedBlobs) {
-      if (!referencedIds.has(blob.id)) {
-        for (const entry of history) {
-          const el = entry.find((e) => e.id === blob.id);
-          if (el?.src?.startsWith("blob:")) {
-            URL.revokeObjectURL(el.src);
-          }
-        }
+      if (!referencedBlobKeys.has(blob.id)) {
         try {
           await db.imageBlobs.delete(blob.id);
           cleanedCount++;
