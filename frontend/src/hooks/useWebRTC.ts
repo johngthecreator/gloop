@@ -8,6 +8,7 @@ export interface UseWebRTCOptions {
 
 export interface UseWebRTCReturn {
   connected: boolean;
+  isHost: boolean;
   peerId: string | null;
   sendEvent: (event: CoopEvent) => void;
   onEvent: React.MutableRefObject<((event: CoopEvent) => void) | null>;
@@ -30,6 +31,7 @@ export function useWebRTC({
   roomId,
 }: UseWebRTCOptions): UseWebRTCReturn {
   const [connected, setConnected] = useState(false);
+  const [isHost, setIsHost] = useState(false);
   const [peerId, setPeerId] = useState<string | null>(null);
   const onEvent = useRef<((event: CoopEvent) => void) | null>(null);
 
@@ -51,6 +53,7 @@ export function useWebRTC({
       wsRef.current = null;
     }
     setConnected(false);
+    setIsHost(false);
     setPeerId(null);
   }, []);
 
@@ -123,6 +126,7 @@ export function useWebRTC({
     ws.onopen = () => {
       // First client to connect is the host / offerer
       isHostRef.current = true;
+      setIsHost(true);
 
       const pc = createPeerConnection();
 
@@ -175,6 +179,7 @@ export function useWebRTC({
       if (msg.type === "offer") {
         // We're the answerer (joiner)
         isHostRef.current = false;
+        setIsHost(false);
 
         // If we already had a PC (e.g., our own offer was out), replace it
         pcRef.current?.close();
@@ -246,5 +251,5 @@ export function useWebRTC({
     };
   }, [cleanup]);
 
-  return { connected, peerId, sendEvent, onEvent, connect, disconnect };
+  return { connected, isHost, peerId, sendEvent, onEvent, connect, disconnect };
 }

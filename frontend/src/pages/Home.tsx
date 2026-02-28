@@ -26,8 +26,9 @@ export default function Home() {
     type: "info",
   });
 
-  // Co-op room state
-  const [roomId, setRoomId] = useState("");
+  // Co-op room state — pre-fill from ?room= query param if present
+  const initialRoomId = new URLSearchParams(window.location.search).get("room") ?? "";
+  const [roomId, setRoomId] = useState(initialRoomId);
   const [signalingUrl, setSignalingUrl] = useState("ws://localhost:8787");
   const [peerCursorPos, setPeerCursorPos] = useState<{
     x: number;
@@ -136,6 +137,7 @@ export default function Home() {
   // ── Co-op (WebRTC) ──────────────────────────────────────────────────
   const {
     connected: coopConnected,
+    isHost: coopIsHost,
     sendEvent,
     onEvent,
     connect: coopConnect,
@@ -149,6 +151,15 @@ export default function Home() {
     onEvent,
     connected: coopConnected,
   });
+
+  // Auto-connect when page is opened via a shared invite link (?room=XXXXX).
+  // Runs only once on mount; clears the query param so the URL stays clean.
+  useEffect(() => {
+    if (initialRoomId) {
+      coopConnect();
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Broadcast local cursor position to peer (throttled ~60fps)
   const handleCanvasMouseMove = useCallback(
@@ -237,94 +248,18 @@ export default function Home() {
         <Settings
           onClose={() => setSettingsOpen(false)}
           onCleanupImages={handleCleanupUnreferencedImages}
+          coop={{
+            connected: coopConnected,
+            isHost: coopIsHost,
+            roomId,
+            signalingUrl,
+            onRoomIdChange: setRoomId,
+            onSignalingUrlChange: setSignalingUrl,
+            onConnect: coopConnect,
+            onDisconnect: coopDisconnect,
+          }}
         />
       )}
-
-      {/* Co-op join panel */}
-      <div
-        style={{
-          position: "fixed",
-          bottom: 12,
-          left: 12,
-          zIndex: 1000,
-          display: "flex",
-          gap: 6,
-          alignItems: "center",
-          background: "rgba(0,0,0,0.65)",
-          padding: "6px 10px",
-          borderRadius: 8,
-          fontSize: 13,
-          color: "white",
-        }}
-      >
-        {coopConnected ? (
-          <>
-            <span style={{ color: "#4ade80" }}>Connected</span>
-            <button
-              onClick={coopDisconnect}
-              style={{
-                background: "#ef4444",
-                color: "white",
-                border: "none",
-                borderRadius: 4,
-                padding: "3px 8px",
-                cursor: "pointer",
-                fontSize: 12,
-              }}
-            >
-              Disconnect
-            </button>
-          </>
-        ) : (
-          <>
-            <input
-              type="text"
-              placeholder="ws://..."
-              value={signalingUrl}
-              onChange={(e) => setSignalingUrl(e.target.value)}
-              style={{
-                width: 120,
-                fontSize: 12,
-                padding: "3px 6px",
-                borderRadius: 4,
-                border: "1px solid #555",
-                background: "#1e1e1e",
-                color: "white",
-              }}
-            />
-            <input
-              type="text"
-              placeholder="Room ID"
-              value={roomId}
-              onChange={(e) => setRoomId(e.target.value)}
-              style={{
-                width: 80,
-                fontSize: 12,
-                padding: "3px 6px",
-                borderRadius: 4,
-                border: "1px solid #555",
-                background: "#1e1e1e",
-                color: "white",
-              }}
-            />
-            <button
-              onClick={coopConnect}
-              disabled={!roomId}
-              style={{
-                background: roomId ? "#6366f1" : "#444",
-                color: "white",
-                border: "none",
-                borderRadius: 4,
-                padding: "3px 8px",
-                cursor: roomId ? "pointer" : "default",
-                fontSize: 12,
-              }}
-            >
-              Connect
-            </button>
-          </>
-        )}
-      </div>
 
       <div style={{ position: "relative" }} onMouseMove={handleCanvasMouseMove}>
         <Canvas
